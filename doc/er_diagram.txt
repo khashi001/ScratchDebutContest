@@ -1,0 +1,60 @@
+erDiagram
+    contest_announcement {
+        UUID id PK
+        TEXT title
+        TEXT description
+        TIMESTAMP start_date
+        TIMESTAMP end_date
+        TIMESTAMP result_announcement_date
+        TEXT privacy_policy
+        JSONB organizer_info
+        TEXT organizer_message
+    }
+    contest_entry {
+        UUID id PK
+        UUID contest_announcement_id FK
+        TEXT name
+        INTEGER age
+        TEXT email
+        TEXT phone_number
+        TEXT work_title
+        TEXT work_description
+        TEXT sb3_file_path
+        TIMESTAMP created_at
+    }
+    judge {
+        UUID id PK
+        TEXT judge_id
+        TEXT password
+        TEXT name
+    }
+    review {
+        UUID id PK
+        UUID contest_entry_id FK
+        UUID judge_id FK
+        INTEGER creation_level
+        INTEGER uniqueness_level
+        INTEGER appearance_level
+        TEXT free_comment
+        TEXT review_status
+        TIMESTAMP review_start_date
+        TIMESTAMP review_end_date
+    }
+    result {
+        UUID id PK
+        UUID contest_entry_id FK
+        INTEGER total_score
+        INTEGER rank
+    }
+    mail_log {
+        UUID id PK
+        UUID contest_entry_id FK
+        TEXT mail_type
+        TIMESTAMP sent_at
+    }
+    contest_announcement ||--o{ contest_entry : announces
+    contest_entry ||--o{ review : receives
+    judge ||--o{ review : performs
+    contest_entry ||--o{ result : has
+    contest_entry ||--o{ mail_log : generates
+
