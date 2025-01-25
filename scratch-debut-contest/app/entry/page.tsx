@@ -84,16 +84,7 @@ export default function EntryForm() {
         throw new Error("Error submitting entry. Please try again.")
       }
 
-      // Store the entry data in localStorage for the confirmation page
-      localStorage.setItem(
-        "entryData",
-        JSON.stringify({
-          ...formData,
-          sb3FilePath: publicUrl,
-        }),
-      )
-
-      router.push("/entry/confirm")
+      router.push("/")
     } catch (error) {
       console.error("Error:", error)
       alert(error instanceof Error ? error.message : "An error occurred. Please try again.")
@@ -104,14 +95,14 @@ export default function EntryForm() {
 
   return (
     <div className="container mx-auto py-12">
-      <h1 className="text-3xl font-bold mb-6">Submit Your Entry</h1>
+      <h1 className="text-3xl font-bold mb-6">コンテストに応募する</h1>
       <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
         <div>
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">名前</Label>
           <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
         </div>
         <div>
-          <Label htmlFor="age">Age</Label>
+          <Label htmlFor="age">年齢</Label>
           <Input
             id="age"
             name="age"
@@ -124,11 +115,11 @@ export default function EntryForm() {
           />
         </div>
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">メールアドレス</Label>
           <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
         </div>
         <div>
-          <Label htmlFor="phoneNumber">Phone Number</Label>
+          <Label htmlFor="phoneNumber">電話番号</Label>
           <Input
             id="phoneNumber"
             name="phoneNumber"
@@ -138,11 +129,11 @@ export default function EntryForm() {
           />
         </div>
         <div>
-          <Label htmlFor="workTitle">Project Title</Label>
+          <Label htmlFor="workTitle">プロジェクトタイトル</Label>
           <Input id="workTitle" name="workTitle" value={formData.workTitle} onChange={handleInputChange} required />
         </div>
         <div>
-          <Label htmlFor="workDescription">Project Description</Label>
+          <Label htmlFor="workDescription">プロジェクトの説明</Label>
           <Textarea
             id="workDescription"
             name="workDescription"
@@ -152,17 +143,17 @@ export default function EntryForm() {
           />
         </div>
         <div>
-          <Label htmlFor="sb3File">Scratch Project File (.sb3)</Label>
+          <Label htmlFor="sb3File">Scratchプロジェクトファイル (.sb3)</Label>
           <Input id="sb3File" name="sb3File" type="file" accept=".sb3" onChange={handleFileChange} required />
         </div>
         <div className="flex justify-between items-center">
           <Link href="/privacy">
             <Button type="button" variant="link">
-              Privacy Policy
+              プライバシーポリシー
             </Button>
           </Link>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Review Submission"}
+            {isSubmitting ? "登録中..." : "登録"}
           </Button>
         </div>
       </form>

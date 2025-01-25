@@ -9,13 +9,13 @@ export default function Header() {
         </Link>
         <ul className="flex space-x-4">
           <li>
-            <Link href="/info">Contest Info</Link>
+            <Link href="/info">コンテスト情報</Link>
           </li>
           <li>
-            <Link href="/entry">Submit Entry</Link>
+            <Link href="/entry">応募する</Link>
           </li>
           <li>
-            <Link href="/judge/login">Judge Login</Link>
+            <Link href="/judge/login">審査する</Link>
           </li>
         </ul>
       </nav>

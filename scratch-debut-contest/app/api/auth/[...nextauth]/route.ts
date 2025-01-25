@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "lib/supabase"
 
 const handler = NextAuth({
   providers: [
@@ -24,7 +24,7 @@ const handler = NextAuth({
           return null
         }
 
-        return { id: data.user.id, name: data.user.email, email: data.user.email }
+        return { id: data.user.id, name: data.user.email, email: credentials.email }
       },
     }),
   ],
@@ -51,4 +51,3 @@ const handler = NextAuth({
 })
 
 export { handler as GET, handler as POST }
-
