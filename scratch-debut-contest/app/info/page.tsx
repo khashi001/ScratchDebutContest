@@ -7,10 +7,8 @@ export default function ContestInfo() {
       <h1 className="text-3xl font-bold mb-6">Scratchチャレンジ！はじめの一歩コンテスト</h1>
       <div className="prose max-w-none">
         <h2>はじめての挑戦、大歓迎！</h2>
-        <p>
-          "プログラミングって面白そうだけど、コンテストに出すのはちょっと不安…" そんなあなたのためのコンテスト、それが
-          <strong>Scratchチャレンジ！はじめの一歩コンテスト</strong> です！
-        </p>
+        <p>"プログラミングって面白そうだけど、コンテストに出すのはちょっと不安..." そんなあなたのためのコンテスト、それが
+          <strong>Scratchチャレンジ！はじめの一歩コンテスト</strong> です！</p>
         <p>
           Scratchを使ったオリジナル作品を応募して、あなたのアイデアや工夫をみんなに見てもらいませんか？
           <strong>はじめてのコンテスト出品</strong> を応援するための特別なコンテストなので、ぜひ気軽に挑戦してください！

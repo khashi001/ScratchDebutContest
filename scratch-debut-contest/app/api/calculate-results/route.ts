@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     // Fetch all entries and their reviews
     const { data: entries, error: entriesError } = await supabase.from("contest_entry").select(`
