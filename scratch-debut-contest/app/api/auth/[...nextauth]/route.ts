@@ -1,6 +1,13 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { supabase } from "lib/supabase"
+import { supabase } from "@/lib/supabase"
+
+interface ExtendedUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
 
 const handler = NextAuth({
   providers: [
@@ -41,9 +48,10 @@ const handler = NextAuth({
     async session({ session, token }) {
       if (token) {
         if (!session.user) {
-          session.user = {}
+          session.user = { id: token.id } as ExtendedUser;
+        } else {
+          (session.user as ExtendedUser).id = token.id as string;
         }
-        session.user.id = token.id
       }
       return session
     },
