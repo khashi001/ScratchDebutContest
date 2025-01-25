@@ -47,12 +47,10 @@ export default function EntryForm() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
 
       // Upload file to Supabase Storage
-      const { error: fileError } = await supabase.storage
-        .from("scratch-projects")
-        .upload(fileName, formData.sb3File, {
-          cacheControl: "3600",
-          upsert: false,
-        })
+      const { error: fileError } = await supabase.storage.from("scratch-projects").upload(fileName, formData.sb3File, {
+        cacheControl: "3600",
+        upsert: false,
+      })
 
       if (fileError) {
         console.error("Error uploading file:", fileError)
@@ -65,7 +63,7 @@ export default function EntryForm() {
       } = supabase.storage.from("scratch-projects").getPublicUrl(fileName)
 
       // Save entry data to database
-      const { error: entryError } = await supabase
+      const { data: entryData, error: entryError } = await supabase
         .from("contest_entry")
         .insert({
           name: formData.name,
@@ -84,6 +82,7 @@ export default function EntryForm() {
         throw new Error("Error submitting entry. Please try again.")
       }
 
+      alert("Your entry has been submitted successfully!")
       router.push("/")
     } catch (error) {
       console.error("Error:", error)
@@ -95,14 +94,14 @@ export default function EntryForm() {
 
   return (
     <div className="container mx-auto py-12">
-      <h1 className="text-3xl font-bold mb-6">コンテストに応募する</h1>
+      <h1 className="text-3xl font-bold mb-6">Submit Your Entry</h1>
       <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
         <div>
-          <Label htmlFor="name">名前</Label>
+          <Label htmlFor="name">Name</Label>
           <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
         </div>
         <div>
-          <Label htmlFor="age">年齢</Label>
+          <Label htmlFor="age">Age</Label>
           <Input
             id="age"
             name="age"
@@ -115,11 +114,11 @@ export default function EntryForm() {
           />
         </div>
         <div>
-          <Label htmlFor="email">メールアドレス</Label>
+          <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
         </div>
         <div>
-          <Label htmlFor="phoneNumber">電話番号</Label>
+          <Label htmlFor="phoneNumber">Phone Number</Label>
           <Input
             id="phoneNumber"
             name="phoneNumber"
@@ -129,11 +128,11 @@ export default function EntryForm() {
           />
         </div>
         <div>
-          <Label htmlFor="workTitle">プロジェクトタイトル</Label>
+          <Label htmlFor="workTitle">Project Title</Label>
           <Input id="workTitle" name="workTitle" value={formData.workTitle} onChange={handleInputChange} required />
         </div>
         <div>
-          <Label htmlFor="workDescription">プロジェクトの説明</Label>
+          <Label htmlFor="workDescription">Project Description</Label>
           <Textarea
             id="workDescription"
             name="workDescription"
@@ -143,21 +142,23 @@ export default function EntryForm() {
           />
         </div>
         <div>
-          <Label htmlFor="sb3File">Scratchプロジェクトファイル (.sb3)</Label>
+          <Label htmlFor="sb3File">Scratch Project File (.sb3)</Label>
           <Input id="sb3File" name="sb3File" type="file" accept=".sb3" onChange={handleFileChange} required />
         </div>
         <div className="flex justify-between items-center">
           <Link href="/privacy">
             <Button type="button" variant="link">
-              プライバシーポリシー
+              Privacy Policy
             </Button>
           </Link>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "登録中..." : "登録"}
+            {isSubmitting ? "Submitting..." : "Submit Entry"}
           </Button>
         </div>
       </form>
     </div>
   )
 }
+
+
 

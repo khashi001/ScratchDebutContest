@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,27 +23,8 @@ export default function EvaluateWork({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const { data, error } = await supabase
-      .from('review')
-      .insert({
-        contest_entry_id: params.id,
-        judge_id: 'current_judge_id',
-        creation_level: parseInt(evaluation.creationLevel),
-        uniqueness_level: parseInt(evaluation.uniquenessLevel),
-        appearance_level: parseInt(evaluation.appearanceLevel),
-        free_comment: evaluation.comments,
-        review_status: 'completed',
-        review_start_date: new Date().toISOString(),
-        review_end_date: new Date().toISOString(),
-      })
-
-    if (error) {
-      console.error('Error submitting review:', error)
-      alert('Error submitting review. Please try again.')
-      return
-    }
-
+    // Here you would typically send the evaluation data to your API
+    console.log("Evaluation submitted:", evaluation)
     router.push(`/judge/works/${params.id}/complete`)
   }
 

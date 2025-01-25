@@ -51,7 +51,7 @@ export default function SubmitEntryPage() {
     }
 
     // Insert the contest entry
-    const { data: entryData, error: entryError } = await supabase.from("contest_entry").insert({
+    const { error: entryError } = await supabase.from("contest_entry").insert({
       contest_announcement_id: "00000000-0000-0000-0000-000000000000", // Replace with actual contest ID
       name: formData.name,
       age: Number.parseInt(formData.age),

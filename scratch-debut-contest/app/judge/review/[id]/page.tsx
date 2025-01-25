@@ -8,9 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
+interface Entry {
+  id: string
+  work_title: string
+  work_description: string
+  sb3_file_path: string
+  // Add other necessary fields
+}
+
 export default function ReviewEntryPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [entry, setEntry] = useState<any>(null)
+  const [entry, setEntry] = useState<Entry | null>(null)
   const [review, setReview] = useState({
     creationLevel: 0,
     uniquenessLevel: 0,
@@ -145,4 +153,3 @@ export default function ReviewEntryPage({ params }: { params: { id: string } }) 
     </div>
   )
 }
-
