@@ -9,4 +9,10 @@
 .env*
 
 
+#tempolary: documents
+*.csv
+*.xlsx
+*.png
+*.docx
+*.txt
 
