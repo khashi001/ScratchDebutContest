@@ -1,163 +1,79 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { supabase } from "@/lib/supabase"
-import Link from "next/link"
 
 export default function EntryForm() {
-  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     age: "",
     email: "",
-    phoneNumber: "",
-    workTitle: "",
-    workDescription: "",
-    sb3File: null as File | null,
+    phone: "",
+    title: "",
+    description: "",
+    file: null,
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, sb3File: e.target.files![0] }))
+    if (e.target.files) {
+      setFormData((prev) => ({ ...prev, file: e.target.files![0] }))
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      if (!formData.sb3File) {
-        throw new Error("Please select a Scratch project file")
-      }
-
-      // Generate a unique file name
-      const fileExt = formData.sb3File.name.split(".").pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-
-      // Upload file to Supabase Storage
-      const { error: fileError } = await supabase.storage
-        .from("scratch-projects")
-        .upload(fileName, formData.sb3File, {
-          cacheControl: "3600",
-          upsert: false,
-        })
-
-      if (fileError) {
-        console.error("Error uploading file:", fileError)
-        throw new Error("Error uploading file. Please try again.")
-      }
-
-      // Get the public URL for the uploaded file
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("scratch-projects").getPublicUrl(fileName)
-
-      // Save entry data to database
-      const { error: entryError } = await supabase
-        .from("contest_entry")
-        .insert({
-          name: formData.name,
-          age: Number.parseInt(formData.age),
-          email: formData.email,
-          phone_number: formData.phoneNumber,
-          work_title: formData.workTitle,
-          work_description: formData.workDescription,
-          sb3_file_path: publicUrl,
-        })
-        .select()
-        .single()
-
-      if (entryError) {
-        console.error("Error submitting entry:", entryError)
-        throw new Error("Error submitting entry. Please try again.")
-      }
-
-      router.push("/")
-    } catch (error) {
-      console.error("Error:", error)
-      alert(error instanceof Error ? error.message : "An error occurred. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
+    // ここでフォームデータの送信処理を実装します
+    console.log("Form submitted:", formData)
+    // Supabaseを使用してデータを保存する処理をここに追加します
   }
 
   return (
-    <div className="container mx-auto py-12">
-      <h1 className="text-3xl font-bold mb-6">コンテストに応募する</h1>
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
-        <div>
-          <Label htmlFor="name">名前</Label>
-          <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-center mb-8 text-blue-600">作品応募フォーム</h1>
+      <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
+        <div className="mb-4">
+          <Label htmlFor="name">氏名</Label>
+          <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
         </div>
-        <div>
+        <div className="mb-4">
           <Label htmlFor="age">年齢</Label>
-          <Input
-            id="age"
-            name="age"
-            type="number"
-            min="8"
-            max="16"
-            value={formData.age}
-            onChange={handleInputChange}
-            required
-          />
+          <Input id="age" name="age" type="number" value={formData.age} onChange={handleChange} required />
         </div>
-        <div>
+        <div className="mb-4">
           <Label htmlFor="email">メールアドレス</Label>
-          <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
+          <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
         </div>
-        <div>
-          <Label htmlFor="phoneNumber">電話番号</Label>
-          <Input
-            id="phoneNumber"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleInputChange}
-            required
-          />
+        <div className="mb-4">
+          <Label htmlFor="phone">電話番号</Label>
+          <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} required />
         </div>
-        <div>
-          <Label htmlFor="workTitle">プロジェクトタイトル</Label>
-          <Input id="workTitle" name="workTitle" value={formData.workTitle} onChange={handleInputChange} required />
+        <div className="mb-4">
+          <Label htmlFor="title">作品タイトル</Label>
+          <Input id="title" name="title" value={formData.title} onChange={handleChange} required />
         </div>
-        <div>
-          <Label htmlFor="workDescription">プロジェクトの説明</Label>
-          <Textarea
-            id="workDescription"
-            name="workDescription"
-            value={formData.workDescription}
-            onChange={handleInputChange}
-            required
-          />
+        <div className="mb-4">
+          <Label htmlFor="description">作品説明</Label>
+          <Textarea id="description" name="description" value={formData.description} onChange={handleChange} />
         </div>
-        <div>
-          <Label htmlFor="sb3File">Scratchプロジェクトファイル (.sb3)</Label>
-          <Input id="sb3File" name="sb3File" type="file" accept=".sb3" onChange={handleFileChange} required />
+        <div className="mb-4">
+          <Label htmlFor="file">作品ファイル（.sb3）</Label>
+          <Input id="file" name="file" type="file" accept=".sb3" onChange={handleFileChange} required />
         </div>
-        <div className="flex justify-between items-center">
-          <Link href="/privacy">
-            <Button type="button" variant="link">
-              プライバシーポリシー
-            </Button>
-          </Link>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "登録中..." : "登録"}
-          </Button>
-        </div>
+        <Button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+          応募する
+        </Button>
       </form>
     </div>
   )
 }
+
+
 
