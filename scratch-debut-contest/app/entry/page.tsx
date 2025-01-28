@@ -6,8 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 
+
+interface FormData {
+  name: string
+  age: string
+  email: string
+  phone: string
+  title: string
+  description: string
+  file: File | null
+}
+
+
 export default function EntryForm() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     age: "",
     email: "",
@@ -23,7 +35,7 @@ export default function EntryForm() {
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       setFormData((prev) => ({ ...prev, file: e.target.files![0] }))
     }
   }

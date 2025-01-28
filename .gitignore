@@ -16,3 +16,6 @@
 *.docx
 *.txt
 
+scratch-debut-contest/cmd
+scratch-debut-contest/package-lock.json
+scratch-debut-contest/package-lock.json
