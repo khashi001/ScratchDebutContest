@@ -10,8 +10,9 @@ import { submitApplication } from "../actions/submitApplication"
 import { Upload, Loader2 } from "lucide-react"
 import type React from "react"
 
-const MAX_SB3_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
-const MAX_MOVIE_FILE_SIZE = 400 * 1024 * 1024 // 400MB in bytes
+// ファイルサイズ制限（バイト単位）
+const MAX_SB3_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+const MAX_MOVIE_FILE_SIZE = 150 * 1024 * 1024 // 150MB（希望サイズ）
 
 export default function ApplyForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -20,15 +21,64 @@ export default function ApplyForm() {
   const [sb3FileName, setSb3FileName] = useState<string | null>(null)
   const [movieFileName, setMovieFileName] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [sb3File, setSb3File] = useState<File | null>(null)
+  const [movieFile, setMovieFile] = useState<File | null>(null)
   const sb3FileInputRef = useRef<HTMLInputElement>(null)
   const movieFileInputRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
 
+  // 大きなファイルの処理時にユーザーに状況を知らせる
   useEffect(() => {
-    if (isSubmitting && uploadProgress >= 90) {
-      setUploadStatus("大きなファイルをアップロード中です。しばらくお待ちください...")
+    if (isSubmitting) {
+      if (uploadProgress >= 90) {
+        setUploadStatus("大きなファイルをアップロード中です。しばらくお待ちください...")
+      } else if (uploadProgress >= 60) {
+        setUploadStatus("ファイルを処理中です...")
+      } else if (uploadProgress >= 30) {
+        setUploadStatus("サーバーにファイルを送信中...")
+      }
     }
   }, [isSubmitting, uploadProgress])
+
+  // 署名付きURLを取得してファイルをアップロードする関数
+  const uploadFileWithSignedUrl = async (file: File) => {
+    const fileExt = file.name.split(".").pop() || "";
+    
+    // 署名付きURLの取得
+    const response = await fetch('/api/upload-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        fileType: file.type,
+        fileExt
+      }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`ファイルアップロードURLの取得に失敗しました: ${error.error || '不明なエラー'}`);
+    }
+    
+    const { signedUrl, path } = await response.json();
+    
+    // 署名付きURLを使用してファイルを直接アップロード
+    const uploadResponse = await fetch(signedUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+    
+    if (!uploadResponse.ok) {
+      throw new Error(`ファイルのアップロードに失敗しました: ${uploadResponse.statusText}`);
+    }
+    
+    return path;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -37,25 +87,63 @@ export default function ApplyForm() {
     setUploadStatus("アップロードを開始しています...")
     setErrorMessage(null)
 
-    const form = e.currentTarget
-    const formData = new FormData(form)
+    if (!formRef.current || !sb3File || !movieFile) {
+      setErrorMessage("必須フィールドが入力されていないか、ファイルが選択されていません。")
+      setIsSubmitting(false)
+      return
+    }
+
+    const formData = new FormData(formRef.current)
 
     try {
-      // Simulate file upload progress
-      const uploadSimulation = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(uploadSimulation)
-            return 90
-          }
-          const increment = prev < 50 ? 10 : prev < 80 ? 5 : 1
-          return Math.min(prev + increment, 90)
-        })
-      }, 500)
+      // アップロード進捗の更新関数
+      const updateProgress = (progress: number) => {
+        setUploadProgress(progress)
+      }
 
-      const result = await submitApplication(formData)
+      // フォームデータから必要な情報を取得
+      const name = formData.get("name") as string
+      const age = Number.parseInt(formData.get("age") as string)
+      const email = formData.get("email") as string
+      const title = formData.get("title") as string
+      const description = formData.get("description") as string
 
-      clearInterval(uploadSimulation)
+      if (!name || !age || !email || !title || !description) {
+        throw new Error("必須フィールドが入力されていません。")
+      }
+
+      // ファイルサイズチェック
+      if (sb3File.size > MAX_SB3_FILE_SIZE) {
+        throw new Error(`sb3ファイルのサイズが大きすぎます。${(MAX_SB3_FILE_SIZE/1024/1024).toFixed(0)}MB以下のファイルを選択してください。`)
+      }
+
+      if (movieFile.size > MAX_MOVIE_FILE_SIZE) {
+        throw new Error(`動画ファイルのサイズが大きすぎます。${(MAX_MOVIE_FILE_SIZE/1024/1024).toFixed(0)}MB以下のファイルを選択してください。`)
+      }
+
+      // sb3ファイルのアップロード（進捗：0% → 40%）
+      updateProgress(10)
+      setUploadStatus("sb3ファイルをアップロード中...")
+      const sb3FilePath = await uploadFileWithSignedUrl(sb3File)
+      updateProgress(40)
+
+      // 動画ファイルのアップロード（進捗：40% → 90%）
+      setUploadStatus("動画ファイルをアップロード中...")
+      const movieFilePath = await uploadFileWithSignedUrl(movieFile)
+      updateProgress(90)
+
+      // 応募情報の送信（進捗：90% → 100%）
+      setUploadStatus("応募情報を登録中...")
+      const result = await submitApplication({
+        name,
+        age,
+        email,
+        title,
+        description,
+        sb3FilePath,
+        movieFilePath
+      })
+
       setUploadProgress(100)
       setUploadStatus("アップロード完了！")
 
@@ -76,14 +164,17 @@ export default function ApplyForm() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       if (file.size > MAX_SB3_FILE_SIZE) {
-        alert("sb3ファイルのサイズが大きすぎます。10MB以下のファイルを選択してください。")
+        alert(`sb3ファイルのサイズが大きすぎます。${(MAX_SB3_FILE_SIZE/1024/1024).toFixed(0)}MB以下のファイルを選択してください。`)
         e.target.value = ""
         setSb3FileName(null)
+        setSb3File(null)
       } else {
         setSb3FileName(file.name)
+        setSb3File(file)
       }
     } else {
       setSb3FileName(null)
+      setSb3File(null)
     }
   }
 
@@ -92,19 +183,23 @@ export default function ApplyForm() {
       const file = e.target.files[0]
       if (file.type.startsWith("video/")) {
         if (file.size > MAX_MOVIE_FILE_SIZE) {
-          alert("動画ファイルのサイズが大きすぎます。400MB以下のファイルを選択してください。")
+          alert(`動画ファイルのサイズが大きすぎます。${(MAX_MOVIE_FILE_SIZE/1024/1024).toFixed(0)}MB以下のファイルを選択してください。`)
           e.target.value = ""
           setMovieFileName(null)
+          setMovieFile(null)
         } else {
           setMovieFileName(file.name)
+          setMovieFile(file)
         }
       } else {
         alert("動画ファイルを選択してください。")
         e.target.value = ""
         setMovieFileName(null)
+        setMovieFile(null)
       }
     } else {
       setMovieFileName(null)
+      setMovieFile(null)
     }
   }
 
@@ -117,7 +212,7 @@ export default function ApplyForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
       <div>
         <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
           名前
@@ -183,6 +278,7 @@ export default function ApplyForm() {
             {sb3FileName ? sb3FileName : "ファイルが選択されていません"}
           </span>
         </div>
+        <div className="text-xs text-gray-500 mt-1">最大ファイルサイズ: 20MB</div>
         <Input
           id="sb3_file"
           name="sb3_file"
@@ -196,7 +292,7 @@ export default function ApplyForm() {
       </div>
       <div>
         <Label htmlFor="movie_file" className="text-gray-700 dark:text-gray-300">
-          作品紹介動画（400MB以内）
+          作品紹介動画
         </Label>
         <div className="flex items-center space-x-2">
           <Button
@@ -211,6 +307,7 @@ export default function ApplyForm() {
             {movieFileName ? movieFileName : "ファイルが選択されていません"}
           </span>
         </div>
+        <div className="text-xs text-gray-500 mt-1">最大ファイルサイズ: 150MB</div>
         <Input
           id="movie_file"
           name="movie_file"
@@ -250,4 +347,3 @@ export default function ApplyForm() {
     </form>
   )
 }
-
